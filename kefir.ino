@@ -1,6 +1,11 @@
 #include "Timer3Pin2PWM.h"
+
+#define PID_OPTIMIZED_I
 #include <GyverPID.h>
+
 #include <EncButton.h>
+
+#include "settings.h"
 
 #define USE_MICRO_WIRE
 #include <GyverOLED.h>
@@ -12,13 +17,17 @@ GyverOLED<SSD1306_128x64, OLED_BUFFER> oled;
 #include "oled_tools.h"
 #include "simpleTimer.h"
 
-MicroDS18B20<A3> sensor;
-GyverPID regulator(10, 5, 1, 1000);
-EncButton<EB_TICK, 3> btnUp;
-EncButton<EB_TICK, 4> btnDown;
+MicroDS18B20<SENSOR_PIN>          sensor;
+GyverPID                          regulator(kP, kI, kD, dT);
+EncButton<EB_TICK, BTN_UP_PIN>    btnUp;
+EncButton<EB_TICK, BTN_DOWN_PIN>  btnDown;
 
 void setup() 
 {
+  #ifdef DEBUG_ENABLE
+    Serial.begin(9600);
+  #endif
+  
   initOLED();
   Wire.setClock(800000L);
   initTimer3Pin2PWM_1hz(0);
@@ -32,7 +41,7 @@ void loop()
 {
   Timer8  cubeTimer(100);
   Timer16 tempTimer(1000);
-  float   targetTemp = 36.0;
+  float   targetTemp = TARGET_TEMP;
   float   currentTemp = sensor.getTemp();
   regulator.setpoint = targetTemp;
 
@@ -63,13 +72,14 @@ void loop()
     
     if(cubeTimer.ready())
     {
-      tickCube(108, 0);
+      tickCube(CUBE_X, CUBE_Y);
     }
 
     if(tempTimer.ready())
     {
       currentTemp = sensor.getTemp();
-      printTemp(currentTemp, targetTemp, -5);
+      DEBUG(currentTemp);
+      printTemp(currentTemp, targetTemp, TEMP_OFFSET);
       setTimer3Pin2PWMDuty(regulator.getResultTimer());
       sensor.requestTemp();
     }
