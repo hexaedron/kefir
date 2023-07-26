@@ -28,6 +28,11 @@ void setup()
     Serial.begin(9600);
   #endif
   
+  pinMode(BTN_UP_PIN, INPUT_PULLUP);
+  pinMode(BTN_DOWN_PIN, INPUT_PULLUP);
+  btnUp.setStepTimeout(500); 
+  btnDown.setStepTimeout(500); 
+
   initOLED();
   Wire.setClock(800000L);
   initTimer3Pin2PWM_1hz(0);
@@ -61,7 +66,7 @@ void loop()
       }
     }
 
-    if(btnUp.click())
+    if(btnDown.click())
     {
       targetTemp -= 0.5;
       if(targetTemp < 25)

@@ -37,6 +37,8 @@ void drawIcon8x8(byte index) {
 void initOLED(void)
 {
   oled.init();
+  oled.flipH(true);
+  oled.flipV(true);
   oled.clear();   // очистить дисплей (или буфер)
   oled.update();
 }
