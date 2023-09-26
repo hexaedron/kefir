@@ -17,10 +17,12 @@ GyverOLED<SSD1306_128x64, OLED_BUFFER> oled;
 #include "oled_tools.h"
 #include "simpleTimer.h"
 
+#include <WDT.h>
+
 MicroDS18B20<SENSOR_PIN>          sensor;
 GyverPID                          regulator(kP, kI, kD, dT);
-EncButton<EB_TICK, BTN_UP_PIN>    btnUp;
-EncButton<EB_TICK, BTN_DOWN_PIN>  btnDown;
+Button btnUp(BTN_UP_PIN);
+Button btnDown(BTN_DOWN_PIN);
 
 void setup() 
 {
@@ -40,6 +42,9 @@ void setup()
   sensor.requestTemp();
   regulator.setLimits(0, 100);
   delay(200);
+
+  // Watchdog
+  wdt_enable(WTO_4S);
 }
 
 void loop() 
@@ -64,6 +69,7 @@ void loop()
       {
         targetTemp = 50;
       }
+      regulator.setpoint = targetTemp;
     }
 
     if(btnDown.click())
@@ -73,6 +79,7 @@ void loop()
       {
         targetTemp = 25;
       }
+      regulator.setpoint = targetTemp;
     }
     
     if(cubeTimer.ready())
@@ -82,6 +89,9 @@ void loop()
 
     if(tempTimer.ready())
     {
+      // Сбросим Watchdog
+      wdt_reset();
+      
       currentTemp = sensor.getTemp();
       DEBUG(currentTemp);
       printTemp(currentTemp, targetTemp, TEMP_OFFSET);

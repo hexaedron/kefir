@@ -17,7 +17,7 @@
 #define BTN_DOWN_PIN 4
 #define SENSOR_PIN  A3
 
-#define TARGET_TEMP 36.0f
+#define TARGET_TEMP 38.0f
 
 // Положение куба и строчек
 #define CUBE_X     108
