@@ -19,6 +19,9 @@ GyverOLED<SSD1306_128x64, OLED_BUFFER> oled;
 
 #include <WDT.h>
 
+#include <EEPROM.h>
+#define EEPROM_KEY 66
+
 MicroDS18B20<SENSOR_PIN>          sensor;
 GyverPID                          regulator(kP, kI, kD, dT);
 Button btnUp(BTN_UP_PIN);
@@ -51,7 +54,19 @@ void loop()
 {
   Timer8  cubeTimer(100);
   Timer16 tempTimer(1000);
-  float   targetTemp = TARGET_TEMP;
+  Timer16 EEPROMTimer(3000);
+  EEPROMTimer.stop();
+
+  float   targetTemp;
+  if(EEPROM[0] != EEPROM_KEY)
+  {
+    targetTemp = TARGET_TEMP;
+  }
+  else
+  {
+    EEPROM.get(1, targetTemp);
+  } 
+
   float   currentTemp = sensor.getTemp();
   regulator.setpoint = targetTemp;
 
@@ -69,6 +84,7 @@ void loop()
       {
         targetTemp = 50;
       }
+      EEPROMTimer.start();
       regulator.setpoint = targetTemp;
     }
 
@@ -79,12 +95,21 @@ void loop()
       {
         targetTemp = 25;
       }
+      EEPROMTimer.start();
       regulator.setpoint = targetTemp;
     }
     
     if(cubeTimer.ready())
     {
       tickCube(CUBE_X, CUBE_Y);
+    }
+
+    // Обновим EEPROM
+    if(EEPROMTimer.ready())
+    {
+      EEPROMTimer.stop();
+      EEPROM.update(0, EEPROM_KEY);
+      EEPROM.put(1, targetTemp);
     }
 
     if(tempTimer.ready())
